@@ -9,8 +9,8 @@ describe('Tests for GerritChangesDataExtracter', () => {
         extracter.fromJSON(loadFixture('../fixtures/open_change_1.json'));
 
         const gerritData = extracter.gerritData;
-        expect(gerritData.getChangesetsLength()).toBe(1);
-        expect(gerritData.getEventsLength()).toBe(30);
+        expect(gerritData.getChangesets().length).toBe(1);
+        expect(gerritData.getEvents().length).toBe(30);
 
         expect(gerritData.events[0]).toEqual({ // first 3rd party reviewer event
             "id": "c4a0bcb8_35186273",
@@ -22,6 +22,22 @@ describe('Tests for GerritChangesDataExtracter', () => {
             "cs_number": 74147,
             "cs_author": "jdoe"
         });
+
+        expect(gerritData.getChangesets()[0]).toEqual({
+            id: 'project-1~master~I4030d100fdcdf57eee4f50dabe7a10b47563732c',
+            project: 'project-1',
+            status: 'NEW',
+            subject: 'IMP Some feature',
+            created: '2017-01-30 11:29:56.044000000',
+            updated: '2017-03-20 14:07:18.661000000',
+            submittable: false,
+            mergeable: true,
+            owner: 'jdoe',
+            reviewScore: '-2',
+            verifyScore: '1',
+            priorityScore: '-2'
+
+        });
     });
 
     test('Extractor can load all changes with their comments data', () => {
@@ -29,8 +45,8 @@ describe('Tests for GerritChangesDataExtracter', () => {
         extracter.fromJSON(loadFixture('../fixtures/pa_open_changes.json'));
 
         const gerritData = extracter.gerritData;
-        expect(gerritData.getChangesetsLength()).toBe(200);
-        expect(gerritData.getEventsLength()).toBe(1255);
+        expect(gerritData.getChangesets().length).toBe(200);
+        expect(gerritData.getEvents().length).toBe(1255);
 
     });
 

@@ -24,10 +24,46 @@ class GerritChangesDataExtracter {
         const jsonData = this.parseJSONString(json);
 
         jsonData.forEach((cs) => {
-            let changeset = { status: 'TODO' }; // TODO Changeset overall data (status & co)
-            this.gerritData.addChangeSet(changeset);
-            this.gerritData.addEvents(this.extractNonAuthorEvents(cs), changeset);
+            this.gerritData.addChangeSet(this.extractChangesetStatus(cs));
+            this.gerritData.addEvents(this.extractNonAuthorEvents(cs), cs);
         });
+    }
+
+    extractChangesetStatus(cs: Object): Object {
+        // https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#change-info
+        let status = this._pickAttributes(cs,
+            'id', 'project',
+            'status', // (NEW, MERGED, ABANDONED, DRAFT)
+            'subject', 'created', 'updated',
+            'submittable', 'mergeable', // (can be submittable but not mergeable)
+        );
+        status.owner = cs.owner.username;
+
+        status.reviewScore = this.extractLabelsScore(cs, 'Code-Review');
+        status.verifyScore = this.extractLabelsScore(cs, 'Verified');
+        status.priorityScore = this.extractLabelsScore(cs, 'Priority');
+
+        return status;
+    }
+
+    extractLabelsScore(cs: Object, labelType: string): string {
+        if (cs.hasOwnProperty('labels') && cs.labels.hasOwnProperty(labelType)) {
+            let codeReviewNode = cs.labels[labelType];
+
+            if (codeReviewNode.hasOwnProperty('value')) // sometimes missing for some reason
+                return codeReviewNode['value'] + '';
+
+            // check subnodes presence:
+            if (codeReviewNode.hasOwnProperty('approved'))
+                return '2';
+            if (codeReviewNode.hasOwnProperty('recommended'))
+                return '1';
+            if (codeReviewNode.hasOwnProperty('disliked'))
+                return '-1';
+            if (codeReviewNode.hasOwnProperty('rejected'))
+                return '-2';
+        }
+        return '';
     }
 
     /**
@@ -104,6 +140,13 @@ class GerritChangesDataExtracter {
         return s.replace(/[\u0000-\u0019]+/g, "");
     }
 
+    // http://stackoverflow.com/a/25835337
+    _pickAttributes(o: Object, ...fields: string[]) {
+        return fields.reduce((a, x) => {
+            if (o.hasOwnProperty(x)) a[x] = o[x];
+            return a;
+        }, {});
+    }
 }
 
 export default GerritChangesDataExtracter;

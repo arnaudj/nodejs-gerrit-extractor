@@ -17,8 +17,8 @@ class GerritChangesData {
         this.events = this.events.concat(events);
     }
 
-    getEventsLength(): number { return this.events.length; }
-    getChangesetsLength(): number { return this.changesets.length; }
+    getEvents(): Array<Object> { return this.events; }
+    getChangesets(): Array<Object> { return this.changesets; }
 }
 
 export default GerritChangesData;
