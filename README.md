@@ -9,6 +9,13 @@ Project uses [Facebook Flow](https://github.com/facebook/flow) for type checking
 - install: `npm install --save-dev flow-bin`
 - run checks: `flow check`
 
+### Profile code
+How to profile code run from tests (jest)
+
+So far, only way found is to:
+- eject react create app (**warning**: cannot be reversed): `npm run eject`
+- run tests with --prof: `NODE_ENV=production node --prof scripts/test.js --env=jsdom` to generate a log file.
+- process results: `node --prof-process isolate-YOURFILENAMEHERE.log > processed.txt`
 
 # About Create React App
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).

@@ -107,10 +107,12 @@ class GerritChangesDataExtracter {
 
         }
 
-        let psVotes: Array<Object> = comment.message.match(/^Patch Set (\d)+: Code-Review(.\d){1}/i)
-        if (psVotes !== null) {
-            comment.psNumber = psVotes[1]; // should be equivalent to msg._revision_number
-            comment.reviewScore = psVotes[2];
+        if (comment.message.startsWith('Patch Set ')) {
+            let psVotes: Array<Object> = comment.message.match(/^Patch Set (\d)+: Code-Review(.\d){1}/i)
+            if (psVotes !== null) {
+                comment.psNumber = psVotes[1]; // should be equivalent to msg._revision_number
+                comment.reviewScore = psVotes[2];
+            }
         }
 
         comment.epoch = Date.parse(comment.date); // nb: seems timezone error
