@@ -2,14 +2,24 @@
 
 import GerritChangesDataExtracter from './GerritChangesDataExtracter';
 import GerritUsersStatsBuilder from './GerritUsersStatsBuilder';
+import GerritChangesDataStore from './GerritChangesDataStore';
+import GerritChangesDataStoreIndexedMemory from './GerritChangesDataStoreIndexedMemory';
 import UserStats from './UserStats';
 
 const fs = require('fs');
 
+let store: GerritChangesDataStore;
+
+beforeEach(() => {
+    store = new GerritChangesDataStoreIndexedMemory(
+        false // skip disk load
+    );
+});
+
 describe('Tests gerrit data extraction', () => {
 
     test('Extractor can load 1 gerrit change with its comments data [in memory store]', () => {
-        const extracter = new GerritChangesDataExtracter();
+        const extracter = new GerritChangesDataExtracter(store);
         extracter.fromJSON(loadFixture('../fixtures/open_change_1.json'));
 
         const gerritData = extracter.gerritData;
@@ -29,6 +39,7 @@ describe('Tests gerrit data extraction', () => {
 
         expect(gerritData.getChangesets()[0]).toEqual({
             id: 'project-1~master~I4030d100fdcdf57eee4f50dabe7a10b47563732c',
+            number: 74147,
             project: 'project-1',
             status: 'new',
             subject: 'IMP Some feature',
@@ -44,7 +55,7 @@ describe('Tests gerrit data extraction', () => {
     });
 
     test('Extractor can load all changes with their comments data', () => {
-        const extracter = new GerritChangesDataExtracter();
+        const extracter = new GerritChangesDataExtracter(store);
         extracter.fromJSON(loadFixture('../fixtures/pa_open_changes.json'));
 
         const gerritData = extracter.gerritData;
@@ -53,7 +64,7 @@ describe('Tests gerrit data extraction', () => {
     });
 
     test('Extractor throws for empty payload', () => {
-        const extracter = new GerritChangesDataExtracter();
+        const extracter = new GerritChangesDataExtracter(store);
 
         const expError = 'Empty json data, cannot continue';
         expect(() => extracter.fromJSON("")).toThrow(expError);
@@ -66,7 +77,7 @@ describe('Tests users statistics', () => {
 
     test('StatsBuilder can analyze 1 user', () => {
         // setup:
-        const extracter = new GerritChangesDataExtracter();
+        const extracter = new GerritChangesDataExtracter(store);
         extracter.fromJSON(loadFixture('../fixtures/open_change_1.json'));
 
         const gerritData = extracter.gerritData;
@@ -112,7 +123,7 @@ describe('Tests users statistics', () => {
 
     test('StatsBuilder can analyze all users', () => {
         // setup:
-        const extracter = new GerritChangesDataExtracter();
+        const extracter = new GerritChangesDataExtracter(store);
         extracter.fromJSON(loadFixture('../fixtures/pa_open_changes.json'));
 
         const gerritData = extracter.gerritData;

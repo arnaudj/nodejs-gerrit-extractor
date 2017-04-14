@@ -6,7 +6,7 @@ var parser = require('relaxed-json'); // gerrit json trailing commas not json co
 
 import GerritChangesData from './GerritChangesData';
 import { GerritChangesDataStore } from './GerritChangesDataStore';
-import GerritChangesDataStoreArrayMemory from './GerritChangesDataStoreArrayMemory';
+import GerritChangesDataStoreIndexedMemory from './GerritChangesDataStoreIndexedMemory';
 
 /**
  * Extract Gerrit changes data
@@ -15,7 +15,7 @@ class GerritChangesDataExtracter {
     gerritData: GerritChangesData;
 
     constructor(store: GerritChangesDataStore) {
-        this.gerritData = new GerritChangesData(store || new GerritChangesDataStoreArrayMemory());
+        this.gerritData = new GerritChangesData(store);
     }
 
     fromJSON(json: string | null) {
@@ -43,6 +43,7 @@ class GerritChangesDataExtracter {
             'subject', 'created', 'updated',
             'submittable', 'mergeable', // (can be submittable but not mergeable)
         );
+        status.number = cs._number;
         status.owner = cs.owner.username;
         status.status = status.status.toLowerCase();
 
