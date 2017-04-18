@@ -2,14 +2,13 @@
   "name": "gerrit-ratio",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "concurrently": "^3.4.0"
   },
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "client": "babel-node start-client.js",
-    "server": "babel-node server/src/bot/Bot.js"
+    "server": "babel-node start-server.js"
   }
 }
