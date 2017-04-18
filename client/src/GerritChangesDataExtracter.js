@@ -1,7 +1,6 @@
 /* @flow */
+'use strict';
 
-// https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#list-changes
-// https://nodejs.org/api/
 var parser = require('relaxed-json'); // gerrit json trailing commas not json compliant
 
 import GerritChangesData from './GerritChangesData';

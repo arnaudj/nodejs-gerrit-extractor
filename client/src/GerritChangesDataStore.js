@@ -1,3 +1,5 @@
+'use strict';
+
 // https://flow.org/en/docs/types/modules/
 export interface GerritChangesDataStore {
     addChangeset(changeset: Object): any;

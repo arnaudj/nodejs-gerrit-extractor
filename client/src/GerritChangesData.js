@@ -1,4 +1,5 @@
 /* @flow */
+'use strict';
 
 import type {GerritChangesDataStore } from './GerritChangesDataStore';
 import GerritChangesDataStoreArrayMemory from './GerritChangesDataStoreArrayMemory';

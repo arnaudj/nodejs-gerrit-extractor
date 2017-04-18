@@ -1,4 +1,5 @@
 /* @flow */
+'use strict';
 import GerritChangesDataStore from './GerritChangesDataStore';
 import Config from '../Config';
 

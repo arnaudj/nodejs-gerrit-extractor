@@ -1,4 +1,5 @@
 /* @flow */
+'use strict';
 import GerritChangesDataStore from './GerritChangesDataStore';
 
 class GerritChangesDataStoreArrayMemory implements GerritChangesDataStore {

@@ -1,4 +1,5 @@
 /* @flow */
+'use strict';
 
 import GerritChangesDataExtracter from './GerritChangesDataExtracter';
 import GerritUsersStatsBuilder from './GerritUsersStatsBuilder';
