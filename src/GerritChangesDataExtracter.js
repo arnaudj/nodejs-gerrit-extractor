@@ -5,6 +5,8 @@
 var parser = require('relaxed-json'); // gerrit json trailing commas not json compliant
 
 import GerritChangesData from './GerritChangesData';
+import { GerritChangesDataStore } from './GerritChangesDataStore';
+import GerritChangesDataStoreArrayMemory from './GerritChangesDataStoreArrayMemory';
 
 /**
  * Extract Gerrit changes data
@@ -12,21 +14,25 @@ import GerritChangesData from './GerritChangesData';
 class GerritChangesDataExtracter {
     gerritData: GerritChangesData;
 
-    constructor() {
-        this.gerritData = new GerritChangesData();
+    constructor(store: GerritChangesDataStore) {
+        this.gerritData = new GerritChangesData(store || new GerritChangesDataStoreArrayMemory());
     }
 
-    fromJSON(json: string) {
+    fromJSON(json: string | null) {
         if (!json || json.length === 0) {
             throw 'Empty json data, cannot continue';
         }
 
         const jsonData = this.parseJSONString(json);
 
+        this.gerritData.loadStore();
+
         jsonData.forEach((cs) => {
             this.gerritData.addChangeSet(this.extractChangesetStatus(cs));
             this.gerritData.addEvents(this.extractNonAuthorEvents(cs), cs);
         });
+
+        this.gerritData.saveStore();
     }
 
     extractChangesetStatus(cs: Object): Object {

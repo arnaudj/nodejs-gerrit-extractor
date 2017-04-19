@@ -1,24 +1,29 @@
 /* @flow */
 
-class GerritChangesData {
-    changesets: Array<Object>;
-    events: Array<Object>;
+import type {GerritChangesDataStore } from './GerritChangesDataStore';
+import GerritChangesDataStoreArrayMemory from './GerritChangesDataStoreArrayMemory';
 
-    constructor() {
-        this.changesets = [];
-        this.events = [];
+class GerritChangesData {
+    store: GerritChangesDataStore;
+
+    constructor(store: GerritChangesDataStore) {
+        this.store = store;
     }
 
+
     addChangeSet(changeset: Object) {
-        this.changesets.push(changeset);
+        this.store.addChangeSet(changeset);
     }
 
     addEvents(events: Array<Object>, sourceChangeset: Object) {
-        this.events = this.events.concat(events);
+        this.store.addEvents(events);
     }
 
-    getEvents(): Array<Object> { return this.events; }
-    getChangesets(): Array<Object> { return this.changesets; }
+    loadStore() { this.store.load(); }
+    saveStore() { this.store.commit(); }
+
+    getEvents(): Array<Object> { return this.store.getEvents(); }
+    getChangesets(): Array<Object> { return this.store.getChangesets(); }
 }
 
 export default GerritChangesData;

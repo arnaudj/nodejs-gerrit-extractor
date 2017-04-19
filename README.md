@@ -4,10 +4,18 @@
 ### Run
 Run: `npm start`
 
+## Run tests
+- Watch mode: `npm test`
+- Only once:  `CI=true npm test` (create-react-app/issues/784)
+
 ### Run typechecker
 Project uses [Facebook Flow](https://github.com/facebook/flow) for type checking:
 - install: `npm install --save-dev flow-bin`
 - run checks: `flow check`
+
+Enable checks on Jest tests:
+- npm install -g flow-typed
+- flow-typed install jest@18.1.0
 
 ### Profile code
 How to profile code run from tests (jest)

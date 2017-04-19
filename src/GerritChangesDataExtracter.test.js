@@ -1,11 +1,14 @@
+/* @flow */
+
 import GerritChangesDataExtracter from './GerritChangesDataExtracter';
 import GerritUsersStatsBuilder from './GerritUsersStatsBuilder';
+import UserStats from './UserStats';
 
 const fs = require('fs');
 
 describe('Tests gerrit data extraction', () => {
 
-    test('Extractor can load 1 gerrit change with its comments data', () => {
+    test('Extractor can load 1 gerrit change with its comments data [in memory store]', () => {
         const extracter = new GerritChangesDataExtracter();
         extracter.fromJSON(loadFixture('../fixtures/open_change_1.json'));
 
@@ -13,7 +16,7 @@ describe('Tests gerrit data extraction', () => {
         expect(gerritData.getChangesets().length).toBe(1);
         expect(gerritData.getEvents().length).toBe(30);
 
-        expect(gerritData.events[0]).toEqual({ // first 3rd party reviewer event
+        expect(gerritData.getEvents()[0]).toEqual({ // first 3rd party reviewer event
             "id": "c4a0bcb8_35186",
             "date": "2017-01-30 12:01:36.253000000",
             "epoch": 1485774096253,

@@ -3,6 +3,9 @@
 # dependencies
 node_modules
 
+# flow
+flow-typed
+
 # testing
 coverage
 
