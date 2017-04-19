@@ -73,18 +73,16 @@ class GerritChangesDataExtracter {
     extractNonAuthorEvents(cs: Object): Array<Object> {
         let events: Array<Object> = [];
         cs.messages.forEach((msg) => {
-            events.push(this.buildEventsForChangeSetMessages(msg, cs._number, cs.owner.username));
-        });
+            let event = this.buildEventsForChangeSetMessages(msg, cs._number, cs.owner.username);
+            if (['builder', 'bot'].indexOf(event.username) !== -1
+                || event.message.startsWith('Uploaded patch set ') // drop author upload PS
+                || event.username === cs.owner.username // drop author adds message/comments)
+            ) {
+                return;
+            }
 
-        events = events.filter((event) => {
-            return ['builder', 'bot'].indexOf(event.username) === -1
-                && !event.message.startsWith('Uploaded patch set ') // drop author upload PS
-                && event.username !== cs.owner.username // drop author adds message/comments
-        });
-
-        events = events.map((event) => {
             delete event.message;
-            return event;
+            events.push(event);
         });
 
         return events;
@@ -100,20 +98,19 @@ class GerritChangesDataExtracter {
             username: msg.author.username,
             message: msg.message,
 
-            ps_number: undefined,
-            review_score: undefined,
+            psNumber: undefined,
+            reviewScore: undefined,
 
             // Related changeset data:
-            cs_number: csNumber,
-            cs_author: csAuthor,
+            csNumber: csNumber,
+            csAuthor: csAuthor,
 
         }
 
-
         let psVotes: Array<Object> = comment.message.match(/^Patch Set (\d)+: Code-Review(.\d){1}/i)
         if (psVotes !== null) {
-            comment.ps_number = psVotes[1]; // should be equivalent to msg._revision_number
-            comment.review_score = psVotes[2];
+            comment.psNumber = psVotes[1]; // should be equivalent to msg._revision_number
+            comment.reviewScore = psVotes[2];
         }
 
         comment.epoch = Date.parse(comment.date); // nb: seems timezone error

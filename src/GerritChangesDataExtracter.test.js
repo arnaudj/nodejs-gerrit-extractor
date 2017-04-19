@@ -1,8 +1,9 @@
 import GerritChangesDataExtracter from './GerritChangesDataExtracter';
+import GerritUsersStatsBuilder from './GerritUsersStatsBuilder';
 
 const fs = require('fs');
 
-describe('Tests for GerritChangesDataExtracter', () => {
+describe('Tests gerrit data extraction', () => {
 
     test('Extractor can load 1 gerrit change with its comments data', () => {
         const extracter = new GerritChangesDataExtracter();
@@ -13,14 +14,14 @@ describe('Tests for GerritChangesDataExtracter', () => {
         expect(gerritData.getEvents().length).toBe(30);
 
         expect(gerritData.events[0]).toEqual({ // first 3rd party reviewer event
-            "id": "c4a0bcb8_35186273",
+            "id": "c4a0bcb8_35186",
             "date": "2017-01-30 12:01:36.253000000",
             "epoch": 1485774096253,
             "username": "inameb",
-            "ps_number": "3",
-            "review_score": "+1",
-            "cs_number": 74147,
-            "cs_author": "jdoe"
+            "psNumber": "3",
+            "reviewScore": "+1",
+            "csNumber": 74147,
+            "csAuthor": "jdoe"
         });
 
         expect(gerritData.getChangesets()[0]).toEqual({
@@ -57,11 +58,94 @@ describe('Tests for GerritChangesDataExtracter', () => {
         expect(() => extracter.fromJSON("")).toThrow(expError);
         expect(() => extracter.fromJSON(null)).toThrow(expError);
     });
-
-    function loadFixture(path: string): string {
-        return fs.readFileSync(__dirname + '/' + path).toString();
-    }
 });
+
+
+describe('Tests users statistics', () => {
+
+    test('StatsBuilder can analyze 1 user', () => {
+        // setup:
+        const extracter = new GerritChangesDataExtracter();
+        extracter.fromJSON(loadFixture('../fixtures/open_change_1.json'));
+
+        const gerritData = extracter.gerritData;
+        expect(gerritData.getChangesets().length).toBe(1);
+        expect(gerritData.getEvents().length).toBe(30);
+
+        // test:
+        const statsBuilder = new GerritUsersStatsBuilder();
+        statsBuilder.build(gerritData);
+
+        const users: Map<string, UserStats> = statsBuilder.getUsers();
+        expect(users.size).toBe(7);
+
+        // test change owner
+        expect(users.get('jdoe')).toEqual({
+            username: 'jdoe',
+            nbChanges: 1,
+            nbChangesOpenReadyForReview: 1,
+            nbChangesOpenVerifyPlus2: 0,
+            nbEvents: 0
+        });
+
+        // test few reviewers
+        expect(users.get('inameb')).toEqual({
+            username: 'inameb',
+            nbChanges: 0,
+            nbChangesOpenReadyForReview: 0,
+            nbChangesOpenVerifyPlus2: 0,
+            nbEvents: 3
+        });
+        expect(users.get('lnamef')).toEqual({
+            username: 'lnamef',
+            nbChanges: 0,
+            nbChangesOpenReadyForReview: 0,
+            nbChangesOpenVerifyPlus2: 0,
+            nbEvents: 2
+        });
+        // bots filtered
+        expect(users.get('builder')).toBe(undefined);
+        expect(users.get('bot')).toBe(undefined);
+    });
+
+
+    test('StatsBuilder can analyze all users', () => {
+        // setup:
+        const extracter = new GerritChangesDataExtracter();
+        extracter.fromJSON(loadFixture('../fixtures/pa_open_changes.json'));
+
+        const gerritData = extracter.gerritData;
+        expect(gerritData.getChangesets().length).toBe(200);
+        expect(gerritData.getEvents().length).toBe(1255);
+
+        // test:
+        const statsBuilder = new GerritUsersStatsBuilder();
+        statsBuilder.build(gerritData);
+
+        const users: Map<string, UserStats> = statsBuilder.getUsers();
+        expect(users.size).toBe(58);
+
+        expect(users.get('janedoe')).toEqual({
+            "username": "janedoe",
+            "nbChanges": 21,
+            "nbChangesOpenReadyForReview": 14,
+            "nbChangesOpenVerifyPlus2": 17,
+            "nbEvents": 89,
+        });
+
+        // bots filtered
+        expect(users.get('builder')).toBe(undefined);
+        expect(users.get('bot')).toBe(undefined);
+    });
+
+});
+
+function loadFixture(path: string): string {
+    return fs.readFileSync(__dirname + '/' + path).toString();
+}
+
+
+
 
 
 
