@@ -1,3 +1,16 @@
+# Gerrit Ratio project
+
+## Dev guide
+### Run
+Run: `npm start`
+
+### Run typechecker
+Project uses [Facebook Flow](https://github.com/facebook/flow) for type checking:
+- install: `npm install --save-dev flow-bin`
+- run checks: `flow check`
+
+
+# About Create React App
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>

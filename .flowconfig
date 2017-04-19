@@ -1,0 +1,8 @@
+[ignore]
+.*/fixtures/.*
+
+[include]
+
+[libs]
+
+[options]
