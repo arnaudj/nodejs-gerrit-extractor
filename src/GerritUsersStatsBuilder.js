@@ -10,7 +10,7 @@ class GerritUsersStatsBuilder {
     }
 
     build(gdata: GerritChangesData) {
-        const getOrCreateUser = (users:any, username:any) => {
+        const getOrCreateUser = (users: any, username: any): UserStats => {
             if (!users.has(username)) {
                 users.set(username, new UserStats(username));
             }
@@ -29,6 +29,19 @@ class GerritUsersStatsBuilder {
     }
 
     getUsers() { return this.users; }
+
+    getUsersStats() {
+        let s = UserStats.getCSVHeader();
+        this.users.forEach((userStats: UserStats, key: string, map) => {
+            s += userStats.toCSVString();
+        });
+        return s;
+    }
+
+    saveUsersStats() {
+        const fs = require('fs');
+        fs.writeFileSync('usersStats.csv', this.getUsersStats());
+    }
 }
 
 export default GerritUsersStatsBuilder;

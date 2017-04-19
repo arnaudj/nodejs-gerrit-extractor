@@ -27,7 +27,7 @@ describe('Tests gerrit data extraction', () => {
         expect(gerritData.getChangesets()[0]).toEqual({
             id: 'project-1~master~I4030d100fdcdf57eee4f50dabe7a10b47563732c',
             project: 'project-1',
-            status: 'NEW',
+            status: 'new',
             subject: 'IMP Some feature',
             created: '2017-01-30 11:29:56.044000000',
             updated: '2017-03-20 14:07:18.661000000',
@@ -37,7 +37,6 @@ describe('Tests gerrit data extraction', () => {
             reviewScore: '-2',
             verifyScore: '1',
             priorityScore: '-2'
-
         });
     });
 
@@ -47,8 +46,7 @@ describe('Tests gerrit data extraction', () => {
 
         const gerritData = extracter.gerritData;
         expect(gerritData.getChangesets().length).toBe(200);
-        expect(gerritData.getEvents().length).toBe(1255);
-
+        expect(gerritData.getEvents().length).toBe(713);
     });
 
     test('Extractor throws for empty payload', () => {
@@ -116,14 +114,14 @@ describe('Tests users statistics', () => {
 
         const gerritData = extracter.gerritData;
         expect(gerritData.getChangesets().length).toBe(200);
-        expect(gerritData.getEvents().length).toBe(1255);
+        expect(gerritData.getEvents().length).toBe(713);
 
         // test:
         const statsBuilder = new GerritUsersStatsBuilder();
         statsBuilder.build(gerritData);
 
         const users: Map<string, UserStats> = statsBuilder.getUsers();
-        expect(users.size).toBe(58);
+        expect(users.size).toBe(57);
 
         expect(users.get('janedoe')).toEqual({
             "username": "janedoe",
@@ -136,8 +134,9 @@ describe('Tests users statistics', () => {
         // bots filtered
         expect(users.get('builder')).toBe(undefined);
         expect(users.get('bot')).toBe(undefined);
-    });
 
+        statsBuilder.saveUsersStats(users);
+    });
 });
 
 function loadFixture(path: string): string {

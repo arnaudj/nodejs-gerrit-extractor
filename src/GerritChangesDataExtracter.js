@@ -33,11 +33,12 @@ class GerritChangesDataExtracter {
         // https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#change-info
         let status = this._pickAttributes(cs,
             'id', 'project',
-            'status', // (NEW, MERGED, ABANDONED, DRAFT)
+            'status', // (new, merged, abandonned, draft)
             'subject', 'created', 'updated',
             'submittable', 'mergeable', // (can be submittable but not mergeable)
         );
         status.owner = cs.owner.username;
+        status.status = status.status.toLowerCase();
 
         status.reviewScore = this.extractLabelsScore(cs, 'Code-Review');
         status.verifyScore = this.extractLabelsScore(cs, 'Verified');
@@ -67,14 +68,14 @@ class GerritChangesDataExtracter {
     }
 
     /**
-     * Extract events: CS level messages (comments within files not includes),
+     * Extract events: CS level messages (comments within files are not included),
      * messages with code review score, etc.
      */
     extractNonAuthorEvents(cs: Object): Array<Object> {
         let events: Array<Object> = [];
         cs.messages.forEach((msg) => {
             let event = this.buildEventsForChangeSetMessages(msg, cs._number, cs.owner.username);
-            if (['builder', 'bot'].indexOf(event.username) !== -1
+            if (['builder', 'bot', 'sonar'].indexOf(event.username) !== -1
                 || event.message.startsWith('Uploaded patch set ') // drop author upload PS
                 || event.username === cs.owner.username // drop author adds message/comments)
             ) {

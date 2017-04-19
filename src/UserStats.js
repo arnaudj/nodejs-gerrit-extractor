@@ -32,5 +32,16 @@ class UserStats {
     acceptEvent(event: Object) {
         this.nbEvents++;
     }
+
+    static getCSVHeader(): string {
+        return "username,nbEvents,nbChanges,nbChangesOpenReadyForReview,nbChangesOpenVerifyPlus2,eventsOverChangesRatio\n";
+    }
+
+    toCSVString(): string {
+        return this.username + "," + this.nbEvents + "," + this.nbChanges + "," + this.nbChangesOpenReadyForReview
+            + "," + this.nbChangesOpenVerifyPlus2
+            + "," + (this.nbChanges > 0 ? (this.nbEvents / this.nbChanges).toFixed(3) : '0')
+            + "\n";
+    }
 }
 export default UserStats;
