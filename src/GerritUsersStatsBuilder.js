@@ -40,7 +40,7 @@ class GerritUsersStatsBuilder {
 
     saveUsersStats() {
         const fs = require('fs');
-        fs.writeFileSync('usersStats.csv', this.getUsersStats());
+        fs.writeFileSync('../usersStats.csv', this.getUsersStats());
     }
 }
 

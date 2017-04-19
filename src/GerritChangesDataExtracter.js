@@ -13,9 +13,14 @@ import GerritChangesDataStoreIndexedMemory from './GerritChangesDataStoreIndexed
  */
 class GerritChangesDataExtracter {
     gerritData: GerritChangesData;
+    skippedUsers: Array<string>;
 
     constructor(store: GerritChangesDataStore) {
         this.gerritData = new GerritChangesData(store);
+        this.skippedUsers = [
+            'builder', 'bot', 'sonar', // UL
+            'treehugger-gerrit', // AOSP
+            ];
     }
 
     fromJSON(json: string | null) {
@@ -28,6 +33,7 @@ class GerritChangesDataExtracter {
         this.gerritData.loadStore();
 
         jsonData.forEach((cs) => {
+            cs.owner.username = this._getGerritUserName(cs.owner); // ensure present
             this.gerritData.addChangeSet(this.extractChangesetStatus(cs));
             this.gerritData.addEvents(this.extractNonAuthorEvents(cs), cs);
         });
@@ -47,29 +53,35 @@ class GerritChangesDataExtracter {
         status.owner = cs.owner.username;
         status.status = status.status.toLowerCase();
 
-        status.reviewScore = this.extractLabelsScore(cs, 'Code-Review');
-        status.verifyScore = this.extractLabelsScore(cs, 'Verified');
-        status.priorityScore = this.extractLabelsScore(cs, 'Priority');
+        status.reviewScore = this.extractLabelsScore(cs, ['Code-Review']);
+        status.verifyScore = this.extractLabelsScore(cs, [
+            'Verified', // UL
+            'Presubmit-Verified'] // AOSP
+        );
+        status.priorityScore = this.extractLabelsScore(cs, ['Priority']);
 
         return status;
     }
 
-    extractLabelsScore(cs: Object, labelType: string): string {
-        if (cs.hasOwnProperty('labels') && cs.labels.hasOwnProperty(labelType)) {
-            let codeReviewNode = cs.labels[labelType];
+    extractLabelsScore(cs: Object, labelCandidates: Array<string>): string {
+        for (let i = 0; i < labelCandidates.length; i++) {
+            let label = labelCandidates[i];
+            if (cs.hasOwnProperty('labels') && cs.labels.hasOwnProperty(label)) {
+                let codeReviewNode = cs.labels[label];
 
-            if (codeReviewNode.hasOwnProperty('value')) // sometimes missing for some reason
-                return codeReviewNode['value'] + '';
+                if (codeReviewNode.hasOwnProperty('value')) // sometimes missing for some reason
+                    return codeReviewNode['value'] + '';
 
-            // check subnodes presence:
-            if (codeReviewNode.hasOwnProperty('approved'))
-                return '2';
-            if (codeReviewNode.hasOwnProperty('recommended'))
-                return '1';
-            if (codeReviewNode.hasOwnProperty('disliked'))
-                return '-1';
-            if (codeReviewNode.hasOwnProperty('rejected'))
-                return '-2';
+                // check subnodes presence:
+                if (codeReviewNode.hasOwnProperty('approved'))
+                    return '2';
+                if (codeReviewNode.hasOwnProperty('recommended'))
+                    return '1';
+                if (codeReviewNode.hasOwnProperty('disliked'))
+                    return '-1';
+                if (codeReviewNode.hasOwnProperty('rejected'))
+                    return '-2';
+            }
         }
         return '';
     }
@@ -81,55 +93,72 @@ class GerritChangesDataExtracter {
     extractNonAuthorEvents(cs: Object): Array<Object> {
         let events: Array<Object> = [];
         cs.messages.forEach((msg) => {
-            let event = this.buildEventsForChangeSetMessages(msg, cs._number, cs.owner.username);
-            if (['builder', 'bot', 'sonar'].indexOf(event.username) !== -1
-                || event.message.startsWith('Uploaded patch set ') // drop author upload PS
-                || event.username === cs.owner.username // drop author adds message/comments)
-            ) {
+            let event = this.buildEventForChangeSetMessage(msg, cs._number, cs.owner.username);
+            if (this.skippedUsers.indexOf(event.username) !== -1)
                 return;
-            }
 
-            delete event.message;
             events.push(event);
         });
 
         return events;
     }
 
-    buildEventsForChangeSetMessages(msg: Object, csNumber: number, csAuthor: string): Object {
-        let comment: Object = {
+    buildEventForChangeSetMessage(msg: Object, csNumber: number, csAuthor: string): Object {
+        let event: Object = {
             id: msg.id,
 
             date: msg.date,
             epoch: undefined,
 
-            username: msg.author.username,
+            username: this._getGerritUserName(msg.author),
             message: msg.message,
 
-            psNumber: undefined,
-            reviewScore: undefined,
+            psNumber: '',
+            reviewScore: '',
 
             // Related changeset data:
             csNumber: csNumber,
             csAuthor: csAuthor,
-
         }
 
-        if (comment.message.startsWith('Patch Set ')) {
-            let psVotes: Array<Object> = comment.message.match(/^Patch Set (\d)+: Code-Review(.\d){1}/i)
-            if (psVotes !== null) {
-                comment.psNumber = psVotes[1]; // should be equivalent to msg._revision_number
-                comment.reviewScore = psVotes[2];
+        let reviewMessage = event.message;
+        if (reviewMessage.startsWith('Patch Set ')) {
+            if (reviewMessage.includes(': Code-Review')) {
+                let psVotes: Array<Object> = reviewMessage.match(/^Patch Set (\d)+: Code-Review(.\d){1}/i)
+                if (psVotes !== null) {
+                    event.psNumber = psVotes[1]; // should be equivalent to msg._revision_number
+                    if (psVotes[2].startsWith('+'))
+                        psVotes[2] = psVotes[2].substring(1);
+                    event.reviewScore = psVotes[2];
+
+                }
+            } else {
+                let psComment: Array<Object> = reviewMessage.match(/^Patch Set (\d)+:/i) // 'Patch Set %d:\n\n(%d comments)''                
+                if (psComment !== null) {
+                    event.psNumber = psComment[1]; // should be equivalent to msg._revision_number
+                }
             }
+
         }
 
-        comment.epoch = Date.parse(comment.date); // nb: seems timezone error
+        event.epoch = Date.parse(event.date); // nb: seems timezone error
 
-        return comment;
+        return event;
+    }
+
+    _getGerritUserName(node: Object): string {
+        if (node.hasOwnProperty('username'))
+            return node.username;
+        else if (node.hasOwnProperty('email')) {
+            return node.email.split('@')[0];
+        }
+
+        return '';
     }
 
     parseJSONString(json: string): any {
-        json = json.startsWith(")]}'") ? json.substring(5) : json; // strip XSSI header
+        let firstLineIdx = json.indexOf("\n");
+        json = json.startsWith(")]}'") ? json.substring(firstLineIdx !== -1 ? firstLineIdx + 1 : 5) : json; // strip first line completely if XSSI header seen (allow comment)
         json = this._sanitize(json);
         return parser.parse(json);
     }
