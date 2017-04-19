@@ -1,5 +1,5 @@
 {
-  "name": "gerrit-ratio-server",
+  "name": "gerrit-extractor-server",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

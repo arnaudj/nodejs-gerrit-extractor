@@ -1,12 +1,24 @@
-# Gerrit Ratio project
+# Gerrit Extractor
+
+Connects to a Gerrit instance via its [REST API](https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html).
+
+For a given filter, extracts all events (patchsets creation, comments, votes, etc) and changes status.
+
+Provides aggregated data via its local REST API.
+
+Using ES6, Node, Flow, Babel, Jest.
 
 ## Dev guide
 ### Run
 Run: `npm start`
 
 ## Run tests
+Client:
 - Watch mode: `npm test`
 - Only once:  `CI=true npm test` (create-react-app/issues/784)
+
+Server:
+- `npm test`
 
 ### Run typechecker
 Project uses [Facebook Flow](https://github.com/facebook/flow) for type checking:
@@ -26,6 +38,7 @@ So far, only way found is to:
 - process results: `node --prof-process isolate-YOURFILENAMEHERE.log > processed.txt`
 
 # About Create React App
+Used by client part (React).
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>

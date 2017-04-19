@@ -6,7 +6,7 @@ import Config from '../Config';
 const fs = require('fs');
 
 /**
- * Index memory, on demande load/save.
+ * Index memory, on demand load/save.
  */
 class GerritChangesDataStoreIndexedMemory implements GerritChangesDataStore {
     // store by UID to allow persistence+refresh

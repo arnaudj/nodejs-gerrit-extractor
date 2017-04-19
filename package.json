@@ -1,5 +1,5 @@
 {
-  "name": "gerrit-ratio",
+  "name": "gerrit-extractor",
   "version": "0.1.0",
   "private": true,
   "dependencies": {},
